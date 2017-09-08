@@ -45,9 +45,13 @@ Adafruit_SSD1306 display = Adafruit_SSD1306();
 
 const char* ssid     = "---";
 const char* password = "---";
-
 const char* host = "blockchain.info";
 const int httpsPort = 443;
+
+unsigned long count;
+float btc;
+float eth;
+boolean refreshDisplay;
 
 // Use web browser to view and copy
 // SHA1 fingerprint of the certificate
@@ -57,35 +61,31 @@ WiFiClientSecure client;
 void setup() {  
   Serial.begin(115200);
   
- 
-  Serial.println("OLED Starting...");
+  Serial.println("Crypto Monitor Starting...");
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-  // init done
-  Serial.println("OLED begun");
   
   // Show image buffer on the display hardware.
   // Since the buffer is intialized with an Adafruit splashscreen
   // internally, this will display the splashscreen.
   display.clearDisplay();
   display.setCursor(0,0);
-  display.print("Matteo");
   display.display();
-  delay(1000);
- 
-  // Clear the buffer.
-  display.clearDisplay();
+  display.setTextSize(1.5);
+  display.setTextColor(WHITE);
+  display.print("Crypto Monitor");
   display.display();
+  delay(2000);
  
   pinMode(BUTTON_A, INPUT_PULLUP);
   pinMode(BUTTON_B, INPUT_PULLUP);
   pinMode(BUTTON_C, INPUT_PULLUP);
  
-  // text display tests
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
+  display.clearDisplay();
   display.setCursor(0,0);
-  display.print("Connecting to SSID\n'Wunderbar Guest':");
+  display.setTextSize(1);
+  display.println("Connecting to WiFi");
+  display.display();
   WiFi.begin(ssid, password);
   
   while (WiFi.status() != WL_CONNECTED) {
@@ -93,10 +93,7 @@ void setup() {
     display.print(".");
     display.display();
   }
-  display.clearDisplay();
-  display.display();
-  display.setCursor(0,0);
-  display.println("Connected!");
+  display.println("\nConnected!");
   display.display();
   delay(1000);
   display.clearDisplay();
@@ -104,26 +101,50 @@ void setup() {
   display.println("IP: " + WiFi.localIP());
   display.println("Waiting for server...");
   display.display();
+
+  count = millis()-(20*60*1000);
+  btc = 0.0;
+  eth = 0.0;
+  refreshDisplay = true;
 }
  
  
 void loop() {
-  //if (! digitalRead(BUTTON_A)) display.print("A");
   //if (! digitalRead(BUTTON_B)) display.print("B");
   //if (! digitalRead(BUTTON_C)) display.print("C");
-  
+  if (! digitalRead(BUTTON_A)) 
+  {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(1);
+    display.println("IP:"); 
+    display.setTextSize(1);
+    display.println(WiFi.localIP());
+    display.display();
+    refreshDisplay = true;
+  }
+  else
+  {
+    if (millis() - count > (10*60*1000))
+    {
+      count = millis();
+      btc = 1/getCoinValue("/tobtc?currency=USD&value=1");
+      eth = 1/getCoinValue("/toeth?currency=USD&value=1");
+      refreshDisplay = true;
+    }
+    
+    if (refreshDisplay)
+    {
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.setTextSize(1); display.print("BTC: "); display.setTextSize(2); display.println(btc);
+      display.setTextSize(1); display.print("ETH: "); display.setTextSize(2);display.println(eth);
+      display.display();
+      refreshDisplay = false;
+    }
+  }
+
   yield();
-
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.print("IP: "); display.println(WiFi.localIP());
-
-  display.print("BTC: "); display.println(1/getCoinValue("/tobtc?currency=USD&value=1"));
-  display.print("ETH: "); display.println(1/getCoinValue("/toeth?currency=USD&value=1"));
-  
-  display.display();
-  
-  delay(10*60*1000);
 }
 
 float getCoinValue(String url)
