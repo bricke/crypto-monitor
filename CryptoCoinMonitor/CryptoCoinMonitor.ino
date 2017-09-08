@@ -52,22 +52,13 @@ unsigned long count;
 float btc;
 float eth;
 boolean refreshDisplay;
-
-// Use web browser to view and copy
-// SHA1 fingerprint of the certificate
 const char* fingerprint = "8C 4C 5B 6C F9 6D 99 89 3D FC 6B F4 48 6E F6 77 A8 FF 5C 11";
 WiFiClientSecure client;
 
 void setup() {  
-  Serial.begin(115200);
-  
-  Serial.println("Crypto Monitor Starting...");
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
   display.clearDisplay();
   display.setCursor(0,0);
   display.display();
@@ -102,7 +93,7 @@ void setup() {
   display.println("Waiting for server...");
   display.display();
 
-  count = millis()-(20*60*1000);
+  count = -(10*60*1000);
   btc = 0.0;
   eth = 0.0;
   refreshDisplay = true;
